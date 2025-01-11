@@ -24,23 +24,82 @@ export class ExchangeRatesService {
     const response = this.httpService.get(url, { params });
     const result = await lastValueFrom(response).then((res) => res.data);
     return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Exchange Rates</title>
-    </head>
-    <body>
-      <h1>Latest Exchange Rates</h1>
-      <p>Base: ${base}</p>
-      <p>Date: ${format(new Date(result.date), 'MMMM d, yyyy')}</p>
-      <p>Rates:</p>
-        <ul>
+        <html>
+        <head>
+            <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #fff;
+            }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+            <h1>Exchange Rates</h1>
+            <p>Latest Exchange Rates</p>
+            <p>Base Currency: ${base}</p>
+            <p>Date: ${format(new Date(result.date), 'MMMM d, yyyy')}</p>
+            <p>Rates for: ${symbols || 'All Currencies'}</p>
+            <ul>
             ${Object.keys(result.rates)
             .map((key) => `<li>${key}: ${result.rates[key]}</li>`)
             .join('')}
-        </ul>
-    </body>
-    </html>
+            </ul>
+            </div>
+        </body>
+        </html>
     `;
   }
+
+  async getHistoricalRate(date: string, base: string, symbols: string): Promise<any> {
+    const url = `${this.baseUrl}/${date}`;
+    const params = {
+        access_key: this.configService.get<string>('EXCHANGERATES_API_KEY'),
+        base,
+        symbols,
+    };
+
+    const response = this.httpService.get(url, { params });
+    const result = await lastValueFrom(response).then(res => res.data);
+    return `
+        <html>
+        <head>
+            <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #fff;
+            }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+            <h1>Exchange Rates</h1>
+            <p>Currencies History</p>
+            <p>Base Currency: ${result.base}</p>
+            <p>Date: ${format(new Date(result.date), 'MMMM d, yyyy')}</p>
+            <p>Rates for: ${symbols || 'All Currencies'}</p>
+            <ul>
+                ${Object.keys(result.rates).slice(0, 5).map(currency => `<li>${currency}: ${result.rates[currency]}</li>`).join('')}
+            </ul>
+            </div>
+        </body>
+        </html>
+    `;
+}
 }
